@@ -1,7 +1,5 @@
 package main
 
-import "log"
-
 type gaugeValues struct {
 	values map[string]int
 	syncID int
@@ -37,35 +35,31 @@ var accSet = make(chan setValues)
 
 func gaugeAccum() {
 	for v := range accGauge {
-		log.Println("Ready to accumulate", v)
 		flusher <- statsToFlush{v.syncID, 'g', 0}
 	}
 }
 
 func timerAccum() {
-	for v := range accGauge {
-		log.Println("Ready to accumulate", v)
+	for v := range accTimer {
 		flusher <- statsToFlush{v.syncID, 't', 0}
 	}
 }
 
 func counterAccum() {
 	for v := range accCounter {
-		log.Println("Ready to accumulate", v)
 		flusher <- statsToFlush{v.syncID, 'c', 0}
 	}
 }
 
 func setAccum() {
 	for v := range accSet {
-		log.Println("Ready to accumulate", v)
 		flusher <- statsToFlush{v.syncID, 's', 0}
 	}
 }
 
 func startAccumulators() {
-	go gaugeReceiver()
-	go timerReceiver()
-	go counterReceiver()
-	go setReceiver()
+	go gaugeAccum()
+	go timerAccum()
+	go counterAccum()
+	go setAccum()
 }

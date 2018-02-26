@@ -59,10 +59,12 @@ func main() {
 	startProcessors()
 	startAccumulators()
 	startFlusher()
+	startFlushTimer()
 
 	router := httprouter.New()
 	router.GET("/", index)
 	router.POST("/stats", acceptStat)
+	router.PUT("/stats", acceptStat)
 
 	log.Fatal(http.ListenAndServe(":8080", router))
 }

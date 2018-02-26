@@ -1,11 +1,18 @@
 package main
 
-import "log"
+import (
+	"log"
+	"time"
+)
 
 type statprocessor func(*statistic)
 
 var gauges = make(map[string]int)
 var counters = make(map[string]int)
+var timers = make(map[string]int)
+var sets = make(map[string]int)
+
+var flushTicker chan time.Time
 
 var syncID int
 
@@ -40,14 +47,14 @@ func gaugeReceiver() {
 		select {
 		case g := <-gaugeChan:
 			processGauge(g)
-		case syncID := <-flushGauge:
-			log.Println("We should be flushing gauge!!")
+			log.Println("Processed gauges", gauges)
+		case syncVal := <-flushGauge:
 			var gaugesCopy = make(map[string]int)
 			for k, v := range gauges {
 				gaugesCopy[k] = v
 			}
 
-			accGauge <- gaugeValues{gaugesCopy, syncID}
+			accGauge <- gaugeValues{gaugesCopy, syncVal}
 		}
 	}
 }
@@ -56,9 +63,9 @@ func timerReceiver() {
 	for {
 		select {
 		case t := <-timerChan:
-			log.Println("Received timer", t)
-		case <-flushTimer:
-			log.Println("We should be flushing timer!!")
+			log.Println("Received timers", t)
+		case syncVal := <-flushTimer:
+			accTimer <- timerValues{timers, syncVal}
 		}
 	}
 }
@@ -69,16 +76,14 @@ func counterReceiver() {
 		case c := <-counterChan:
 			log.Println("Received counter", c)
 			processCounter(c)
-		case syncID := <-flushCounter:
-			log.Println("We should be flushing counter!!")
-
+		case syncVal := <-flushCounter:
 			var dataCopy = make(map[string]int)
 			for k, v := range counters {
 				dataCopy[k] = v
 				counters[k] = 0
 			}
 
-			accCounter <- counterValues{dataCopy, syncID}
+			accCounter <- counterValues{dataCopy, syncVal}
 		}
 	}
 }
@@ -88,17 +93,33 @@ func setReceiver() {
 		select {
 		case s := <-setChan:
 			log.Println("Received set", s)
-		case <-flushSet:
-			log.Println("We should be flushing sets!!")
+		case syncVal := <-flushSet:
+			accSet <- setValues{sets, syncVal}
 		}
 	}
 }
 
+func processFlushTimer() {
+	flushTicker := time.Tick(5 * time.Second)
+
+	for _ = range flushTicker {
+		flush()
+	}
+}
+
+func startFlushTimer() {
+	go processFlushTimer()
+}
+
 func flush() {
+	log.Println("Flushing id", syncID)
+
 	flushGauge <- syncID
 	flushTimer <- syncID
 	flushCounter <- syncID
 	flushSet <- syncID
+
+	syncID++
 }
 
 func startProcessors() {

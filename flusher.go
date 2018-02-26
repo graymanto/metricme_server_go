@@ -6,13 +6,17 @@ var flushValues = make(map[int][]statsToFlush)
 
 func flushProcessor() {
 	for v := range flusher {
-		log.Println("Ready to flush", v)
+		log.Println("Received flush with id", v.syncID, string(v.statType))
 
 		flushValues[v.syncID] = append(flushValues[v.syncID], v)
 
 		if len(flushValues[v.syncID]) == 4 {
-			log.Println("We have everything, we should flush!!")
 			delete(flushValues, v.syncID)
+			log.Println("We have everything, we should flush!!", v.syncID, len(flushValues))
+			log.Println("Flushing", flushValues[v.syncID])
+			for k := range flushValues {
+				log.Println("Remaining key is", k)
+			}
 		}
 	}
 }
