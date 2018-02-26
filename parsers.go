@@ -37,18 +37,29 @@ func parseCounting(name string, parts []string) (bool, *statistic) {
 	return true, basic
 }
 
-func parseTiming(name string, parts []string) (bool, *statistic) {
-	return newBasicStat(name, parts)
-}
-
 func parseGauges(name string, parts []string) (bool, *statistic) {
-	return newBasicStat(name, parts)
+	var prefix = parts[0][0]
+
+	if prefix != '+' && prefix != '-' {
+		return newBasicStat(name, parts)
+	}
+
+	ok, basic := newBasicStat(name, append([]string{parts[0][1:]}, parts[1:]...))
+
+	if !ok {
+		return false, nil
+	}
+
+	basic.sign = string(prefix)
+
+	return true, basic
 }
 
 var parseMap = map[string]statparser{
 	"c":  parseCounting,
-	"ms": parseTiming,
-	"g":  parseTiming,
+	"ms": newBasicStat,
+	"g":  parseGauges,
+	"s":  newBasicStat,
 }
 
 func parseStat(stat string) (bool, *statistic) {

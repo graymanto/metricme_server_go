@@ -56,6 +56,10 @@ func acceptStat(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 }
 
 func main() {
+	startProcessors()
+	startAccumulators()
+	startFlusher()
+
 	router := httprouter.New()
 	router.GET("/", index)
 	router.POST("/stats", acceptStat)
