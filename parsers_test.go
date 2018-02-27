@@ -23,6 +23,26 @@ func makeParseTestString(name string, value int, mtype string, sign string,
 	return testString
 }
 
+func getSampleValue(sample string, mtype string) float32 {
+	validSample := sample
+
+	// All types except counters and timers should ignore sampling
+	if mtype != "c" && mtype != "ms" {
+		validSample = ""
+	}
+
+	if validSample != "" {
+		f, _ := strconv.ParseFloat(validSample[1:], 32)
+		return float32(f)
+	}
+
+	if mtype == "c" {
+		return 1
+	}
+
+	return 0
+}
+
 // Creates a single test case. Builds a statsd compatible string and also creates
 // the expected test result in a statistic struct.
 func makeParseTestCase(name string, value int, mtype string, sign string,
@@ -31,13 +51,10 @@ func makeParseTestCase(name string, value int, mtype string, sign string,
 	testString := makeParseTestString(name, value, mtype, sign, sample)
 
 	test := &parseStatTest{testString, []*statistic{}}
-	validSample := sample
 
-	// All types except counters and timers should ignore sampling
-	if mtype != "c" && mtype != "ms" {
-		validSample = ""
-	}
-	test.out = append(test.out, &statistic{name, value, mtype, sign, validSample})
+	sampleVal := getSampleValue(sample, mtype)
+
+	test.out = append(test.out, &statistic{name, value, "", mtype, sign, sampleVal})
 
 	return test
 }
@@ -48,7 +65,10 @@ func appendParseTestCase(test *parseStatTest, name string, value int, mtype stri
 	sign string, sample string) {
 	testString := makeParseTestString(name, value, mtype, sign, sample)
 	test.in += ";" + testString
-	test.out = append(test.out, &statistic{name, value, mtype, sign, sample})
+
+	sampleVal := getSampleValue(sample, mtype)
+
+	test.out = append(test.out, &statistic{name, value, "", mtype, sign, sampleVal})
 }
 
 // Builds a table of test cases for the parse all stats tests

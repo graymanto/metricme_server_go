@@ -12,9 +12,10 @@ import (
 type statistic struct {
 	name   string
 	value  int
+	svalue string
 	mtype  string
 	sign   string
-	sample string
+	sample float32
 }
 
 func index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {

@@ -17,7 +17,7 @@ func newBasicStat(name string, parts []string) (bool, *statistic) {
 	}
 
 	return true, &statistic{
-		name, num, parts[1], "", "",
+		name, num, "", parts[1], "", 0,
 	}
 }
 
@@ -28,11 +28,21 @@ func parseCounting(name string, parts []string) (bool, *statistic) {
 		return false, nil
 	}
 
+	basic.sample = 1
+
 	if len(parts) < 3 || !strings.HasPrefix(parts[2], "@") {
 		return true, basic
 	}
 
-	basic.sample = parts[2]
+	f, err := strconv.ParseFloat(parts[2][1:], 32)
+
+	if err != nil {
+		log.Println("Error parsing sample rate from stat", name, parts[2])
+		return false, nil
+	}
+	sr := float32(f)
+
+	basic.sample = sr
 
 	return true, basic
 }
@@ -55,11 +65,17 @@ func parseGauges(name string, parts []string) (bool, *statistic) {
 	return true, basic
 }
 
+func parseSets(name string, parts []string) (bool, *statistic) {
+	return true, &statistic{
+		name, -1, parts[0], parts[1], "", 0,
+	}
+}
+
 var parseMap = map[string]statparser{
 	"c":  parseCounting,
 	"ms": newBasicStat,
 	"g":  parseGauges,
-	"s":  newBasicStat,
+	"s":  parseSets,
 }
 
 func parseStat(stat string) (bool, *statistic) {

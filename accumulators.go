@@ -6,17 +6,17 @@ type gaugeValues struct {
 }
 
 type timerValues struct {
-	values map[string]int
+	values map[string][]int
 	syncID int
 }
 
 type counterValues struct {
-	values map[string]int
+	values map[string]float32
 	syncID int
 }
 
 type setValues struct {
-	values map[string]int
+	values map[string]map[string]bool
 	syncID int
 }
 
