@@ -45,7 +45,6 @@ func acceptStat(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	}
 
 	stats := string(body[:])
-	log.Println("We received stats ", stats)
 
 	ok := processStats(stats)
 

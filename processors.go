@@ -30,7 +30,6 @@ func processGauge(stat *statistic) {
 
 // processCounter performs the accumulation operations on counter metrics
 func processCounter(stat *statistic) {
-	// TODO: as counters are ints, data loss on division
 	counters[stat.name] += float32(stat.value) * (1 / stat.sample)
 }
 
@@ -59,7 +58,6 @@ func gaugeReceiver() {
 		select {
 		case g := <-gaugeChan:
 			processGauge(g)
-			log.Println("Processed gauges", gauges)
 		case syncVal := <-flushGauge:
 			var gaugesCopy = make(map[string]int)
 			for k, v := range gauges {
@@ -77,7 +75,6 @@ func timerReceiver() {
 	for {
 		select {
 		case t := <-timerChan:
-			log.Println("Received timers", t)
 			processTimer(t)
 		case syncVal := <-flushTimer:
 			var timersCopy = make(map[string][]int)
@@ -96,7 +93,6 @@ func counterReceiver() {
 	for {
 		select {
 		case c := <-counterChan:
-			log.Println("Received counter", c)
 			processCounter(c)
 		case syncVal := <-flushCounter:
 			var dataCopy = make(map[string]float32)
@@ -105,7 +101,7 @@ func counterReceiver() {
 				counters[k] = 0
 			}
 
-			accCounter <- counterValues{dataCopy, syncVal}
+			accCounter <- counterValues{dataCopy, 5000, syncVal}
 		}
 	}
 }
@@ -128,8 +124,8 @@ func setReceiver() {
 	}
 }
 
-// startFlushTimer starts a timer that calls the flush event every x seconds
-func startFlushTimer() {
+// runFlushTimer starts a timer that calls the flush event every x seconds
+func runFlushTimer() {
 	flushTicker := time.Tick(5 * time.Second)
 
 	for _ = range flushTicker {
@@ -137,8 +133,15 @@ func startFlushTimer() {
 	}
 }
 
+// startFlushTimer starts a timer that calls the flush event every x seconds
+func startFlushTimer() {
+	go runFlushTimer()
+}
+
 // flush starts the flush operation by sending a syncID to each flush channel
 func flush() {
+	log.Println("Flushing")
+
 	flushGauge <- syncID
 	flushTimer <- syncID
 	flushCounter <- syncID
