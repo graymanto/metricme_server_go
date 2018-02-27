@@ -18,7 +18,18 @@ func printCounters(stats statsToFlush) {
 }
 
 func printTimers(stats statsToFlush) {
-	// Not implemented printing timers
+	metrics := stats.values.(accTimerMetrics)
+
+	for k, val := range metrics.values {
+		log.Println("Timer:", k, "mean", val.mean)
+		log.Println("Timer:", k, "median", val.median)
+		log.Println("Timer:", k, "lower", val.lower)
+		log.Println("Timer:", k, "upper", val.upper)
+		log.Println("Timer:", k, "count", val.count)
+		log.Println("Timer:", k, "sum", val.sum)
+		log.Println("Timer:", k, "sumsquares", val.sumSquares)
+		log.Println("Timer:", k, "std", val.std)
+	}
 }
 
 func printGauges(stats statsToFlush) {
