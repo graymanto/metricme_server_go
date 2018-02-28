@@ -56,9 +56,11 @@ func acceptStat(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 }
 
 func main() {
-	startProcessors()
+	config := loadConfig()
+
+	startProcessors(config.flushInterval)
 	startAccumulators()
-	startFlusher()
+	startFlusher(&config)
 	startFlushTimer()
 
 	router := httprouter.New()

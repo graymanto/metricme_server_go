@@ -71,7 +71,7 @@ func gaugeReceiver() {
 
 // timerReceiver receives parsed timer metrics from the input channel and performs
 // the required accumulation operations.
-func timerReceiver() {
+func timerReceiver(flushInterval int) {
 	for {
 		select {
 		case t := <-timerChan:
@@ -82,14 +82,14 @@ func timerReceiver() {
 				timersCopy[k] = v
 				timers[k] = make([]int, 0)
 			}
-			accTimer <- timerValues{timersCopy, 5000, syncVal}
+			accTimer <- timerValues{timersCopy, flushInterval, syncVal}
 		}
 	}
 }
 
 // counterReceiver receives parsed counter metrics from the input channel and performs
 // the required accumulation operations.
-func counterReceiver() {
+func counterReceiver(flushInterval int) {
 	for {
 		select {
 		case c := <-counterChan:
@@ -101,7 +101,7 @@ func counterReceiver() {
 				counters[k] = 0
 			}
 
-			accCounter <- counterValues{dataCopy, 5000, syncVal}
+			accCounter <- counterValues{dataCopy, flushInterval, syncVal}
 		}
 	}
 }
@@ -151,10 +151,10 @@ func flush() {
 }
 
 // startProcessors starts the listening loop for each different type of metric to enable
-func startProcessors() {
+func startProcessors(flushInterval int) {
 	go gaugeReceiver()
-	go timerReceiver()
-	go counterReceiver()
+	go timerReceiver(flushInterval)
+	go counterReceiver(flushInterval)
 	go setReceiver()
 }
 
