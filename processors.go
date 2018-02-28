@@ -82,7 +82,7 @@ func timerReceiver() {
 				timersCopy[k] = v
 				timers[k] = make([]int, 0)
 			}
-			accTimer <- timerValues{timersCopy, syncVal}
+			accTimer <- timerValues{timersCopy, 5000, syncVal}
 		}
 	}
 }
