@@ -61,7 +61,7 @@ func main() {
 	startProcessors(config.flushInterval)
 	startAccumulators()
 	startFlusher(&config)
-	startFlushTimer()
+	startFlushTimer(config.flushInterval)
 
 	router := httprouter.New()
 	router.GET("/", index)

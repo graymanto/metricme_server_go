@@ -125,8 +125,8 @@ func setReceiver() {
 }
 
 // runFlushTimer starts a timer that calls the flush event every x seconds
-func runFlushTimer() {
-	flushTicker := time.Tick(5 * time.Second)
+func runFlushTimer(flushInterval int) {
+	flushTicker := time.Tick(time.Duration(flushInterval) * time.Millisecond)
 
 	for _ = range flushTicker {
 		flush()
@@ -134,8 +134,8 @@ func runFlushTimer() {
 }
 
 // startFlushTimer starts a timer that calls the flush event every x seconds
-func startFlushTimer() {
-	go runFlushTimer()
+func startFlushTimer(flushInterval int) {
+	go runFlushTimer(flushInterval)
 }
 
 // flush starts the flush operation by sending a syncID to each flush channel
